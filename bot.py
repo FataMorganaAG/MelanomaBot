@@ -1,5 +1,5 @@
 import telebot
-
+from PIL import Image
 
 bot = telebot.TeleBot('TOKEN')
 
@@ -82,6 +82,50 @@ def precautions(message):
         "с водостойкой формулой. Защитные средства должны использоваться, даже если вы выходите "
         "на улицу на короткое время. Они наносятся как минимум за 30 минут до выхода на солнце и часто добавляются "
         "на тело (каждые два часа), особенно после купания, потоотделения и протирания тканью")
+
+@bot.message_handler(commands=['check']) # загружаем картинку для проверки
+def check(message):
+    file_id = message.photo[-1].file_id
+    file_info = bot.get_file(file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    # тут обращаемся к функции обрезки по центру 224 на 224
+    im_new = crop_center(downloaded_file, 224, 224)
+    '''
+    Дальше мы либо пишем функциями нейронку и обучаем её тут, либо придумываем как обученную модель
+    импортировать. обрезанную картинку (im_new) скармливаем нейронке. потом получаем то, к какому классу
+    нейронка отнесла картинку и пишем условия пока что переменная clf будет ответом от нейронки   
+    '''
+    if clf = benign:
+        bot.send_message(
+            message.chat.id, "Скорее всего поводов для беспокойства нет. \n" +
+        "Хотите обсудить тревожные симптомы в формате теста? Нажмите  /test ")
+    elif clf = malignant:
+        keyboard = telebot.types.InlineKeyboardMarkup()
+        keyboard.add(
+            telebot.types.InlineKeyboardButton(
+                'Да', url='ССЫЛКА'
+            )
+        )
+        bot.send_message(
+            message.chat.id,
+            "Возможно Вам действительно следует обратиться к специалисту. Хотите найти клинику?",
+            reply_markup=keyboard
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "Кажется, что-то пошло не так. Попробуйте загрузить другое изображение.")
+
+
+def crop_center(pil_img, crop_width: int, crop_height: int) -> Image:
+    """
+    Функция для обрезки изображения по центру.
+    """
+    img_width, img_height = pil_img.size
+    return pil_img.crop(((img_width - crop_width) // 2,
+                         (img_height - crop_height) // 2,
+                         (img_width + crop_width) // 2,
+                         (img_height + crop_height) // 2))
 
 
 @bot.message_handler(commands=['test'])  # тест по симптомам вопрос 1
