@@ -85,25 +85,26 @@ def precautions(message):
 
 @bot.message_handler(commands=['check']) # загружаем картинку для проверки
 def check(message):
-    file_id = message.photo[-1].file_id
-    file_info = bot.get_file(file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-    # тут обращаемся к функции обрезки по центру 224 на 224
-    im_new = crop_center(downloaded_file, 224, 224)
-    '''
-    Дальше мы либо пишем функциями нейронку и обучаем её тут, либо придумываем как обученную модель
-    импортировать. обрезанную картинку (im_new) скармливаем нейронке. потом получаем то, к какому классу
-    нейронка отнесла картинку и пишем условия пока что переменная clf будет ответом от нейронки   
-    '''
-    if clf = benign:
+    image_file = bot.get_file(message.photo[-1].file_id)
+    image_file.download("image.jpg")
+    # здесь нужно доделать добавление картинки от пользователя
+    
+    im_new = mpimg.imread("image.jpg")
+    im_new = image_to_batch(im_new, 224)
+    model = keras.models.load_model('mymodel.h5')
+    clf = model.predict(im_new, batch_size=224)
+    clf = clf.flatten()
+    clf = clf.tolist()
+   
+    if clf[0] > clf[1]:
         bot.send_message(
             message.chat.id, "Скорее всего поводов для беспокойства нет. \n" +
-        "Хотите обсудить тревожные симптомы в формате теста? Нажмите  /test ")
-    elif clf = malignant:
+                             "Хотите обсудить тревожные симптомы в формате теста? Нажмите  /test ")
+    elif clf[0] <= clf[1]:
         keyboard = telebot.types.InlineKeyboardMarkup()
         keyboard.add(
             telebot.types.InlineKeyboardButton(
-                'Да', url='ССЫЛКА'
+                'Да', url='https://www.google.com/search?q=%D0%9A%D0%BB%D0%B8%D0%BD%D0%B8%D0%BA%D0%B0+%D1%80%D1%8F%D0%B4%D0%BE%D0%BC+%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0+%D0%BD%D0%B0+%D0%BC%D0%B5%D0%BB%D0%B0%D0%BD%D0%BE%D0%BC%D1%83&sxsrf=ALeKk032W6pfrQv03_hyPu5mzw6kMS7JJw%3A1622477440635&ei=gAq1YKGOJs-GrwSYuJ-gBQ&oq=%D0%9A%D0%BB%D0%B8%D0%BD%D0%B8%D0%BA%D0%B0+%D1%80%D1%8F%D0%B4%D0%BE%D0%BC+%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0+%D0%BD%D0%B0+%D0%BC%D0%B5%D0%BB%D0%B0%D0%BD%D0%BE%D0%BC%D1%83&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECc6BwgAEEcQsAM6BQgAEM0CUKVCWPFGYNdJaAJwA3gAgAGCAogBkQiSAQUwLjUuMZgBAKABAaoBB2d3cy13aXrIAQjAAQE&sclient=gws-wiz&ved=0ahUKEwihzoS8p_TwAhVPw4sKHRjcB1QQ4dUDCA4&uact=5'
             )
         )
         bot.send_message(
@@ -115,17 +116,10 @@ def check(message):
         bot.send_message(
             message.chat.id,
             "Кажется, что-то пошло не так. Попробуйте загрузить другое изображение.")
-
-
-def crop_center(pil_img, crop_width: int, crop_height: int) -> Image:
-    """
-    Функция для обрезки изображения по центру.
-    """
-    img_width, img_height = pil_img.size
-    return pil_img.crop(((img_width - crop_width) // 2,
-                         (img_height - crop_height) // 2,
-                         (img_width + crop_width) // 2,
-                         (img_height + crop_height) // 2))
+            
+def image_to_batch(img, size):
+    img_resized = cv2.resize(img, (size, size)).reshape(1, size, size, img.shape[2])
+    return img_resized
 
 
 @bot.message_handler(commands=['test'])  # тест по симптомам вопрос 1
