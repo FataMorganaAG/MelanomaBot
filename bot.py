@@ -99,9 +99,10 @@ def check(message):
         new_file.write(downloaded_file_photo)
 
     bot.reply_to(message, "Фото добавлено")
+    photo = '/Users/username/PycharmProjects/MelanomaBot/photos/' + message.photo[-1].file_id + file_extension
 
     
-    im_new = mpimg.imread("image.jpg")
+    im_new = mpimg.imread(photo)
     im_new = image_to_batch(im_new, 224) 
     model = keras.models.load_model('mymodel.h5')
     clf = model.predict(im_new, batch_size=224)
