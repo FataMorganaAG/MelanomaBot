@@ -85,12 +85,24 @@ def precautions(message):
 
 @bot.message_handler(commands=['check']) # загружаем картинку для проверки
 def check(message):
+	# в папке photos название картинки это её id и расширение
+    # id можно посмотреть в принте строки 94
     image_file = bot.get_file(message.photo[-1].file_id)
-    image_file.download("image.jpg")
-    # здесь нужно доделать добавление картинки от пользователя
+    # print(image_file)
+    # image_file.download("image.jpg")
+    filename, file_extension = os.path.splitext(image_file.file_path)
+    # print(file_extension)
+    downloaded_file_photo = bot.download_file(image_file.file_path)
+
+    src = 'photos/' + message.photo[-1].file_id + file_extension
+    with open(src, 'wb') as new_file:
+        new_file.write(downloaded_file_photo)
+
+    bot.reply_to(message, "Фото добавлено")
+
     
     im_new = mpimg.imread("image.jpg")
-    im_new = image_to_batch(im_new, 224)
+    im_new = image_to_batch(im_new, 224) 
     model = keras.models.load_model('mymodel.h5')
     clf = model.predict(im_new, batch_size=224)
     clf = clf.flatten()
